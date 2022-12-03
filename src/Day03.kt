@@ -7,21 +7,21 @@ fun main() {
 
     fun part1(input: List<String>): Int {
         return input.sumOf { text ->
-            val compartment1 = text.slice(0 until text.length/2)
-            val compartment2 = text.slice(text.length/2 until text.length)
-            check (compartment1.length == compartment2.length)
+            val compartment1 = text.slice(0 until text.length / 2)
+            val compartment2 = text.slice(text.length / 2 until text.length)
+            check(compartment1.length == compartment2.length)
             val commonType = compartment1.toSet().intersect(compartment2.toSet())
-            check (commonType.size == 1)
+            check(commonType.size == 1)
             typePriority(commonType.first())
         }
     }
 
     fun part2(input: List<String>): Int {
         return input.windowed(size = 3, step = 3).sumOf { group ->
-            val badgeType = group.fold(group.first().toSet()) { acc, backpack ->
+            val badgeType = group.drop(1).fold(group.first().toSet()) { acc, backpack ->
                 acc.intersect(backpack.toSet())
             }
-            check (badgeType.size == 1)
+            check(badgeType.size == 1)
             typePriority(badgeType.first())
         }
     }
