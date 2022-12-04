@@ -16,7 +16,6 @@ fun List<String>.toNumbers(): List<Int?> =
             Integer.parseInt(it)
         }}
 
-
 /**
  * Converts string to md5 hash.
  */
