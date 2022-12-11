@@ -1,4 +1,4 @@
-const val DAY = "10"
+private const val DAY = "10"
 fun main() {
     fun List<String>.parseInput(): List<Int?> = map {
         if (it == "noop") {
