@@ -1,7 +1,7 @@
 private const val DAY = "11"
 
-data class Expression(val argument1: Int?, val argument2: Int?, val isAdd: Boolean) {
-    fun calculateNextLevel(oldLevel: Int): Int {
+data class Expression(val argument1: Long?, val argument2: Long?, val isAdd: Boolean) {
+    fun calculateNextLevel(oldLevel: Long): Long {
         val v1 = argument1 ?: oldLevel
         val v2 = argument2 ?: oldLevel
         return if (isAdd) {
@@ -12,22 +12,22 @@ data class Expression(val argument1: Int?, val argument2: Int?, val isAdd: Boole
     }
 }
 
-data class DivisionTest(val divisor: Int, val nextOnTrue: Int, val nextOnFalse: Int) {
-    fun calculateNextPass(v: Int) =
-        if (v % divisor == 0) {
+data class DivisionTest(val divisor: Long, val nextOnTrue: Int, val nextOnFalse: Int) {
+    fun calculateNextPass(v: Long) =
+        if (v % divisor == 0L) {
             nextOnTrue
         } else {
             nextOnFalse
         }
 }
 
-data class Monkey(val index: Int,  val items: ArrayDeque<Int>, val worryLevel: Expression, val divisionTest: DivisionTest) {
+data class Monkey(val index: Int,  val items: ArrayDeque<Long>, val worryLevel: Expression, val divisionTest: DivisionTest) {
     var inspectionCounter = 0
 
     constructor(index: Int, startingItems: List<Int>, worryLevel: Expression, divisionTest: DivisionTest) :
-        this(index, ArrayDeque<Int>().also { it.addAll(startingItems) }, worryLevel, divisionTest)
+        this(index, ArrayDeque<Long>().also { it.addAll(startingItems.map(Int::toLong)) }, worryLevel, divisionTest)
 
-    fun inspects(): Int? {
+    fun inspects(): Long? {
         val value = items.removeFirstOrNull() ?: return null
         ++inspectionCounter
         return worryLevel.calculateNextLevel(value)
@@ -46,10 +46,10 @@ fun List<String>.toMonkeys(): List<Monkey>  {
         if (line.startsWith("Monkey")) {
             val items = iter.next().substringAfter(": ").split(",").map(String::trim).map(String::toInt).toList()
             val testCondition = iter.next().substringAfter(" = ").trim().split(" ")
-            val arg1 = testCondition[0].toIntOrNull()
-            val arg2 = testCondition[2].toIntOrNull()
+            val arg1 = testCondition[0].toLongOrNull()
+            val arg2 = testCondition[2].toLongOrNull()
             val isAdd = testCondition[1].contains("+")
-            val divisor = iter.next().substringAfter("divisible by ").toInt()
+            val divisor = iter.next().substringAfter("divisible by ").toLong()
             var nextForTrue = -1
             var nextForFalse = -1
             repeat(2) {
@@ -75,15 +75,14 @@ fun List<String>.toMonkeys(): List<Monkey>  {
 
 fun main() {
 
-    fun part1(input: List<String>): Int {
-        val monkeys = input.toMonkeys()
+    fun runMonkeyBusiness(numOfRounds: Int, monkeys: List<Monkey>, reliefFun: (Long) -> Long): Long {
         println(monkeys)
-        for (round in 1..20) {
+        for (round in 1..numOfRounds) {
             println("Round $round")
             monkeys.forEach { monkey ->
                 while (monkey.items.isNotEmpty()) {
                     monkey.inspects()?.let { value ->
-                        val reliefValue = value / 3
+                        val reliefValue = reliefFun(value)
                         val nextMonkey = monkey.divisionTest.calculateNextPass(reliefValue)
                         monkeys[nextMonkey].items.addLast(reliefValue)
                     }
@@ -94,18 +93,25 @@ fun main() {
             monkeys.forEach(Monkey::printStatus)
             println("---------------")
         }
-        return monkeys.map { it.inspectionCounter }.sortedDescending().take(2).fold(1) { acc, v -> acc * v }
+        return monkeys.map { it.inspectionCounter }.sortedDescending().take(2).fold(1L) { acc, v -> acc * v }
     }
 
-    fun part2(input: List<String>): Int {
-        return 0
+    fun part1(input: List<String>): Long {
+        val monkeys = input.toMonkeys()
+        return runMonkeyBusiness(numOfRounds = 20, monkeys, reliefFun = { it / 3 })
+    }
+
+    fun part2(input: List<String>): Long {
+        val monkeys = input.toMonkeys()
+        val coeff = monkeys.map { it.divisionTest.divisor }.fold(1L) { acc, v -> acc * v }
+        return runMonkeyBusiness(numOfRounds = 10_000, monkeys, reliefFun = { it % coeff })
     }
 
     val testInput1 = readInput("Day${DAY}_test")
-    check(part1(testInput1).also { println(it) } == 10605) { "Part1 Test - expected value doesn't match" }
-//    check(part2(testInput1).also { println(it) } == 0) { "Part2 Test - expected value doesn't match" }
+    check(part1(testInput1).also { println(it) } == 10605L) { "Part1 Test - expected value doesn't match" }
+    check(part2(testInput1).also { println(it) } == 2713310158L) { "Part2 Test - expected value doesn't match" }
 
     val input = readInput("Day${DAY}")
     println(part1(input))
-//    println(part2(input))
+    println(part2(input))
 }
