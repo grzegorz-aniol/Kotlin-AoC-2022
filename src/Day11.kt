@@ -1,6 +1,6 @@
 private const val DAY = 11
 
-class Day11(private val debug: Boolean = false) {
+class Day11 {
 
     fun part1(input: List<String>): Long {
         val monkeys = input.toMonkeys()
@@ -14,9 +14,7 @@ class Day11(private val debug: Boolean = false) {
     }
 
     private fun runMonkeyBusiness(numOfRounds: Int, monkeys: List<Monkey>, reliefFun: (Long) -> Long): Long {
-        if (debug) println(monkeys)
         for (round in 1..numOfRounds) {
-            if (debug) println("Round $round")
             monkeys.forEach { monkey ->
                 while (monkey.items.isNotEmpty()) {
                     monkey.inspect()?.let { value ->
@@ -25,10 +23,6 @@ class Day11(private val debug: Boolean = false) {
                         monkeys[nextMonkey].items.addLast(reliefValue)
                     }
                 }
-            }
-            if (debug) {
-                monkeys.forEach(Monkey::printStatus)
-                println("---------------")
             }
         }
         return monkeys.map { it.inspectionCounter }.sortedDescending().take(2).fold(1L) { acc, v -> acc * v }
@@ -55,20 +49,16 @@ class Day11(private val debug: Boolean = false) {
             }
     }
 
-    private data class Monkey(val index: Int, val items: ArrayDeque<Long>, val levelChangeExpression: Expression, val divisionRule: DivisionRule) {
+    private data class Monkey(val items: ArrayDeque<Long>, val levelChangeExpression: Expression, val divisionRule: DivisionRule) {
         var inspectionCounter = 0
 
-        constructor(index: Int, startingItems: List<Int>, levelChangeExpression: Expression, divisionRule: DivisionRule) :
-                this(index, ArrayDeque<Long>().also { it.addAll(startingItems.map(Int::toLong)) }, levelChangeExpression, divisionRule)
+        constructor(startingItems: List<Int>, levelChangeExpression: Expression, divisionRule: DivisionRule) :
+                this(ArrayDeque<Long>().also { it.addAll(startingItems.map(Int::toLong)) }, levelChangeExpression, divisionRule)
 
         fun inspect(): Long? {
             val level = items.removeFirstOrNull() ?: return null
             ++inspectionCounter
             return levelChangeExpression.calculateNextLevel(level)
-        }
-
-        fun printStatus() {
-            println("Monkey $index -> " + items.joinToString(","))
         }
     }
 
@@ -76,7 +66,6 @@ class Day11(private val debug: Boolean = false) {
         val numberRegexp = Regex("\\d+")
         return sequence {
             val iter = iterator()
-            var index = 0
             while (iter.hasNext()) {
                 if (iter.next().startsWith("Monkey")) {
                     val items = numberRegexp.findAll(iter.next()).map { it.value.toInt() }.toList()
@@ -87,7 +76,6 @@ class Day11(private val debug: Boolean = false) {
                     val onTrue = numberRegexp.find(iter.next())?.value?.toInt()!!
                     val onFalse = numberRegexp.find(iter.next())?.value?.toInt()!!
                     yield(Monkey(
-                        index = index++,
                         startingItems = items,
                         levelChangeExpression = expr,
                         divisionRule = DivisionRule(divisor, onTrue, onFalse)
