@@ -14,7 +14,7 @@ class TemplateDayXX {
 
 fun main() {
     val testInput1 = readInput("Day${DAY}_test")
-    val day = TemplateDayXX()
+    val day = Day14()
     check(day.part1(testInput1).also { println(it) } == -1) { "Part1 Test - expected value doesn't match" }
     check(day.part2(testInput1).also { println(it) } == -1) { "Part2 Test - expected value doesn't match" }
 
