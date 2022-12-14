@@ -19,6 +19,7 @@ class Day14 {
         fun put(p: Point, what: Int) {
             area[p.y][p.x] = what
         }
+
         fun nextMove(p: Point): Point? {
             for (d in directions) {
                 val nextPoint = p.plus(d)
@@ -31,6 +32,65 @@ class Day14 {
             }
             return null
         }
+    }
+
+    private fun List<String>.toPoints(): List<List<Point>> = map {
+        it.split(" -> ")
+            .map { point ->
+                val (x, y) = point.split(",").map { it.toInt() }
+                Point(x, y)
+            }
+    }
+
+    private fun forEachPointInLine(s: Point, e: Point, run: (p: Point) -> Unit) {
+        var p = s
+        val direction = p.direction(e)
+        run(p)
+        while (p != e) {
+            p = p.plus(direction)
+            run(p)
+        }
+    }
+
+    private fun List<List<Point>>.toArea(withFloor: Boolean = false): Area {
+        val minY = 0
+        var maxY = this.maxOf { it.maxOf { it.y } }
+        val data = if (withFloor) {
+            maxY += 2
+            toMutableList().apply {
+                add(listOf(Point(-1000, maxY), Point(1000, maxY)))
+            }
+        } else {
+            this
+        }
+        val minX = data.minOf { it.minOf { it.x } }
+        val maxX = data.maxOf { it.maxOf { it.x } }
+        val dx = maxX - minX + 1
+        val dy = maxY - minY + 1
+        val area = Array(dy) { IntArray(dx) { SPACE } }
+        data.forEach { multiline ->
+            multiline.windowed(size = 2).forEach { (s, e) ->
+                forEachPointInLine(s, e) { p -> area[p.y - minY][p.x - minX] = ROCK }
+            }
+        }
+        return Area(area, dimension = Point(dx, dy), startPoint = Point(500 - minX, 0 - minY))
+    }
+
+    fun part1(input: List<String>) = solve(input)
+
+    fun part2(input: List<String>) = solve(input, withFloor = true)
+
+    fun solve(input: List<String>, withFloor: Boolean = false): Int {
+        val area = input.toPoints().toArea(withFloor)
+        var found = true
+        var total = 0
+        while (found) {
+            found = dropSandUnit(area)
+            if (found) {
+                ++total
+            }
+        }
+        return total
     }
 
     private fun dropSandUnit(area: Area): Boolean {
@@ -51,82 +111,15 @@ class Day14 {
         return false
     }
 
-    fun part1(input: List<String>): Int {
-        val area = input.toPoints().toArea()
-        var found = true
-        var total = 0
-        while (found) {
-            found = dropSandUnit(area)
-            if (found) {
-                ++total
-            }
-            area.print()
-        }
-        return total
-    }
-
-    fun part2(input: List<String>): Int {
-        return 0
-    }
-
-    private fun forEachInLine(s: Point, e: Point, run: (p: Point) -> Unit) {
-        var p = s
-        val direction = p.direction(e)
-        run(p)
-        while (p != e) {
-            p = p.plus(direction)
-            run(p)
-        }
-    }
-
-    private fun List<String>.toPoints(): List<List<Point>> = map {
-        it.split(" -> ")
-            .map {
-                it.split(",")
-                    .let { Point(it[0].toInt(), it[1].toInt()) }
-            }
-    }
-
-    private fun List<List<Point>>.toArea(): Area {
-        val minX = this.minOf { it.minOf { it.x } }
-        val maxX = this.maxOf { it.maxOf { it.x } }
-        val minY = 0
-        val maxY = this.maxOf { it.maxOf { it.y } }
-        val dx = maxX - minX + 1
-        val dy = maxY - minY + 1
-        val area = Array(dy) { IntArray(dx) { SPACE } }
-        this.forEach { multiline ->
-            multiline.windowed(size = 2).forEach { (s, e) ->
-                forEachInLine(s, e) { p ->
-                    val nx = p.x - minX
-                    val ny = p.y - minY
-                    area[ny][nx] = ROCK
-                }
-            }
-        }
-        return Area(area, dimension = Point(dx, dy), startPoint = Point(500 - minX, 0 - minY))
-    }
-
-    private fun Area.print() {
-        area.forEach { row ->
-            println(row.joinToString(separator = "") {
-                when (it) {
-                    SPACE -> "."
-                    ROCK -> "#"
-                    else -> "o"
-                }
-            })
-        }
-    }
 }
 
 fun main() {
     val testInput1 = readInput("Day${DAY}_test")
     val day = Day14()
     check(day.part1(testInput1).also { println(it) } == 24) { "Part1 Test - expected value doesn't match" }
-//    check(day.part2(testInput1).also { println(it) } == -1) { "Part2 Test - expected value doesn't match" }
+    check(day.part2(testInput1).also { println(it) } == 93) { "Part2 Test - expected value doesn't match" }
 
     val input = readInput("Day${DAY}")
     println(day.part1(input))
-//    println(day.part2(input))
+    println(day.part2(input))
 }
