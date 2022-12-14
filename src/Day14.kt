@@ -22,7 +22,7 @@ class Day14 {
 
         fun nextMove(p: Point): Point? {
             for (d in directions) {
-                val nextPoint = p.plus(d)
+                val nextPoint = p + d
                 if (!includes(nextPoint)) {
                     return nextPoint
                 }
@@ -47,7 +47,7 @@ class Day14 {
         val direction = p.direction(e)
         run(p)
         while (p != e) {
-            p = p.plus(direction)
+            p += direction
             run(p)
         }
     }
